@@ -57,10 +57,15 @@ class TeHelper
         } else {
             $time = $due_time->subHours(48);
         }
-
         return $time->format('Y-m-d H:i:s');
 
     }
 
+    public static function isset_empty_check($data){
+        if(isset($data) && $data == ''){
+            return true;
+        }
+        return false;
+    }
 }
 
