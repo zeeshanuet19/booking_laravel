@@ -11,7 +11,7 @@ use DTApi\Models\Job;
 use DTApi\Models\User;
 use DTApi\Models\Language;
 use DTApi\Models\UserMeta;
-use DTApi\Helpers\TeHelper; // TeHelper will not need to Import with every statement if we add it in composer.json file. See line # 29
+use DTApi\Helpers\TeHelper; // TeHelper will not need to Import with every statement if we add it in composer.json file. See line # 29 if we place all code directly in file.
 use Illuminate\Http\Request;
 use DTApi\Models\Translator;
 use DTApi\Mailers\AppMailer;
@@ -134,15 +134,15 @@ class BookingRepository extends BaseRepository
                  * means TeHelper::isset_empty_check() can be write as isset_empty_check()
                  * */
                 
-                if(isset_empty_check($data['due_date'])){
+                if(TeHelper::isset_empty_check($data['due_date'])){
                     $response['status'] = 'fail'; $response['message'] = "Du måste fylla in alla fält"; $response['field_name'] = "due_date";
                     goto return_statement;
                 }
-                if(isset_empty_check($data['due_time'])){
+                if(TeHelper::isset_empty_check($data['due_time'])){
                     $response['status'] = 'fail'; $response['message'] = "Du måste fylla in alla fält"; $response['field_name'] = "due_time";
                     goto return_statement;
                 }
-                if(isset_empty_check($data['duration'])){
+                if(TeHelper::isset_empty_check($data['duration'])){
                     $response['status'] = 'fail'; $response['message'] = "Du måste fylla in alla fält"; $response['field_name'] = "duration";
                     goto return_statement;
                 }
@@ -151,7 +151,7 @@ class BookingRepository extends BaseRepository
                     goto return_statement;
                 }
             } else {
-                if(isset_empty_check($data['duration'])) {
+                if(TeHelper::isset_empty_check($data['duration'])) {
                     $response['status'] = 'fail'; $response['message'] = "Du måste fylla in alla fält"; $response['field_name'] = "duration";
                     goto return_statement;
                 }
@@ -203,7 +203,6 @@ class BookingRepository extends BaseRepository
 
             $data['b_created_at'] = date('Y-m-d H:i:s');
             if (isset($due)){ // brackets in condition is considered as good practice. because indentation in next statment will include that in condition
-                // TeHelper::willExpireAt() can also be replaced with willExpireAt()
                 $data['will_expire_at'] = TeHelper::willExpireAt($due, $data['b_created_at']);
             }
             $data['by_admin'] = isset($data['by_admin']) ? $data['by_admin'] : 'no';
@@ -444,8 +443,7 @@ class BookingRepository extends BaseRepository
                 }
             }
         }
-        // $data['language'] = TeHelper::fetchLanguageFromJobId($data['from_language_id']);
-        $data['language'] = fetchLanguageFromJobId($data['from_language_id']);
+        $data['language'] = TeHelper::fetchLanguageFromJobId($data['from_language_id']);
         $data['notification_type'] = 'suitable_job';
         $msg_contents = '';
         if ($data['immediate'] == 'no') { $msg_contents = 'Ny bokning för ' . $data['language'] . 'tolk ' . $data['duration'] . 'min ' . $data['due']; }
@@ -679,12 +677,9 @@ class BookingRepository extends BaseRepository
         }
 
         if ($job->from_language_id != $data['from_language_id']) {
-            // TeHelper::fetchLanguageFromJobId can be replaced with fetchLanguageFromJobId now
             $log_data[] = [
-                // 'old_lang' => TeHelper::fetchLanguageFromJobId($job->from_language_id),
-                'old_lang' => fetchLanguageFromJobId($job->from_language_id),
-                // 'new_lang' => TeHelper::fetchLanguageFromJobId($data['from_language_id'])
-                'new_lang' => fetchLanguageFromJobId($data['from_language_id'])
+                 'old_lang' => TeHelper::fetchLanguageFromJobId($job->from_language_id),
+                 'new_lang' => TeHelper::fetchLanguageFromJobId($data['from_language_id'])
             ];
             $old_lang = $job->from_language_id;
             $job->from_language_id = $data['from_language_id'];
@@ -786,8 +781,7 @@ class BookingRepository extends BaseRepository
             $job->save();
             $job_data = $this->jobToData($job);
 
-            // $subject = 'Vi har nu återöppnat er bokning av ' . TeHelper::fetchLanguageFromJobId($job->from_language_id) . 'tolk för bokning #' . $job->id;
-            $subject = 'Vi har nu återöppnat er bokning av ' . fetchLanguageFromJobId($job->from_language_id) . 'tolk för bokning #' . $job->id;
+            $subject = 'Vi har nu återöppnat er bokning av ' . TeHelper::fetchLanguageFromJobId($job->from_language_id) . 'tolk för bokning #' . $job->id;
             $this->mailer->send($email, $name, $subject, 'emails.job-change-status-to-customer', $dataEmail);
 
             $this->sendNotificationTranslator($job, $job_data, '*');   // send Push all sutiable translators
@@ -1176,8 +1170,7 @@ class BookingRepository extends BaseRepository
     {
         $data = array();
         $data['notification_type'] = 'job_expired';
-        // $language = TeHelper::fetchLanguageFromJobId($job->from_language_id);
-        $language = fetchLanguageFromJobId($job->from_language_id);
+        $language = TeHelper::fetchLanguageFromJobId($job->from_language_id);
         $msg_text = array(
             "en" => 'Tyvärr har ingen tolk accepterat er bokning: (' . $language . ', ' . $job->duration . 'min, ' . $job->due . '). Vänligen pröva boka om tiden.'
         );
@@ -1429,8 +1422,7 @@ class BookingRepository extends BaseRepository
                 $customer = $job->user()->get()->first();
                 if ($customer) {
                     $data = array(); $data['notification_type'] = 'job_cancelled';
-                    // $language = TeHelper::fetchLanguageFromJobId($job->from_language_id);
-                    $language = fetchLanguageFromJobId($job->from_language_id);
+                    $language = TeHelper::fetchLanguageFromJobId($job->from_language_id);
                     $msg_text = array(
                         "en" => 'Er ' . $language . 'tolk, ' . $job->duration . 'min ' . $job->due . ', har avbokat tolkningen. Vi letar nu efter en ny tolk som kan ersätta denne. Tack.'
                     );
